@@ -28,7 +28,8 @@ RUN apt-get update \
 		unzip \
 	&& rm -r /var/lib/apt/lists/*
 
-ENV HTTPD_VERSION 2.2.31
+#ENV HTTPD_VERSION 2.2.31
+ENV HTTPD_VERSION 2.4.26
 ENV HTTPD_BZ2_URL https://www.apache.org/dist/httpd/httpd-$HTTPD_VERSION.tar.bz2
 
 RUN buildDeps=' \
@@ -51,13 +52,14 @@ RUN buildDeps=' \
 # see https://httpd.apache.org/download.cgi#verify
 	&& export GNUPGHOME="$(mktemp -d)" \
 	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B1B96F45DFBDCCF974019235193F180AB55D9977 \
+	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 791485A8 \
 	&& gpg --batch --verify httpd.tar.bz2.asc httpd.tar.bz2 \
 	&& rm -r "$GNUPGHOME" httpd.tar.bz2.asc \
 	&& mkdir -p src/httpd \
 	&& tar -xvf httpd.tar.bz2 -C src/httpd --strip-components=1 \
 	&& rm httpd.tar.bz2 \
 	&& cd src/httpd \
-	&& ./configure --enable-so --enable-ssl --prefix=$HTTPD_PREFIX --enable-mods-shared='proxy ldap authnz_ldap most' \
+	&& ./configure --enable-so --enable-ssl --prefix=$HTTPD_PREFIX --enable-mpms-shared=prefork --with-mpm=prefork --enable-mods-shared='proxy ldap authnz_ldap most' \
 	&& make -j"$(nproc)" \
 	&& make install \
 	&& cd ../../ \
